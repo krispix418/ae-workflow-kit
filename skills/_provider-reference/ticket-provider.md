@@ -97,7 +97,7 @@ mcp__linear__get_issue
 ```
 mcp__atlassian__lookupJiraAccountId   # step 1: get assignee ID
   cloudId: <from config>
-  query: "you@org.com"
+  query: "you"
 
 mcp__atlassian__createJiraIssue       # step 2: create
   cloudId: <from config>
@@ -194,7 +194,7 @@ mcp__linear__save_issue                      # single call, direct state set
 ```
 mcp__atlassian__searchJiraIssuesUsingJql
   cloudId: <from config>
-  jql: "assignee = 'you@org.com@your-org.com' AND status in (Done, Closed) AND resolved >= '2026-01-01' ORDER BY resolved ASC"
+  jql: "assignee = 'you@your-org.com' AND status in (Done, Closed) AND resolved >= '2026-01-01' ORDER BY resolved ASC"
 ```
 
 #### Linear
@@ -221,13 +221,13 @@ mcp__linear__list_issues
 ```
 mcp__atlassian__lookupJiraAccountId
   cloudId: <from config>
-  query: "you@org.com"
+  query: "you"
 ```
 
 #### Linear
 ```
 mcp__linear__get_user
-  query: "you@org.com@your-org.com"    # accepts email, name, or ID
+  query: "you@your-org.com"    # accepts email, name, or ID
 ```
 
 **Notes:**

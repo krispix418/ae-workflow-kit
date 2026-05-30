@@ -1,150 +1,120 @@
 # ae-workflow-kit
 
-A Claude Code skill framework that automates the overhead of analytics engineering — from morning orientation to PR creation to accomplishment tracking.
+A Claude Code plugin that automates the overhead of analytics engineering — from morning orientation to PR creation to accomplishment tracking.
 
-## What This Is
-
-A collection of Claude Code skill templates and patterns that chain together into a complete workflow for analytics engineers (or any engineer working across tickets, PRs, and project trackers).
-
-Instead of building skills one at a time, this kit provides the full lifecycle:
+## Install
 
 ```
-/daily-overview  ->  /start-ticket  ->  [do the work]  ->  /create-pr  ->  /wrap-up
-                     /resume-work       /todo                              /session-recap
-                                        /update-tickets
-                                                                           /accomplishments
+/plugin install krispix418/ae-workflow-kit
 ```
 
-Each skill produces context that the next skill consumes. Your work artifacts persist across sessions, so picking up where you left off is instant.
+Then run `/ae-setup` to configure your environment.
 
-## The Skill Lifecycle
+## What You Get
 
-| Phase | Skill | What It Automates |
-|-------|-------|-------------------|
-| Start of day | `daily-overview` | Sprint status, PR queue, TODO, meeting carry-forward |
-| New ticket | `start-ticket` | Branch, artifact directory, context file, implementation plan |
-| Resume work | `resume-work` | Context loading, git status, sibling ticket patterns |
-| During work | `update-tickets`, `todo` | Tracker sync, task management |
-| Ship it | `create-pr` | PR template filling, ticket linking |
-| End of session | `wrap-up`, `session-recap` | Context persistence, branch cleanup |
-| Career growth | `accomplishments` | Accomplishment logging from git + tickets + artifacts |
+| Command | Phase | What It Does |
+|---------|-------|-------------|
+| `/ae-setup` | One-time | Interactive wizard — detects MCPs, configures tracker, scaffolds artifacts |
+| `/ae-daily-overview` | Start of day | Sprint status, PR queue, TODO, suggested first move |
+| `/ae-start-ticket` | New ticket | Branch, artifact directory, context file, implementation plan |
+| `/ae-resume-work` | Resume work | Context loading, git status, sibling ticket patterns |
+| `/ae-update-tickets` | During work | Reconcile tracker statuses against branches/PRs/merges |
+| `/ae-create-pr` | Ship it | Push branch, fill PR template, link ticket |
+| `/ae-wrap-up` | End of session | Update context, commit/push, switch to main |
+| `/ae-session-recap` | End of session | Quick summary of what you got done |
+| `/ae-accomplishments` | Periodic | Log what you shipped from git + tickets + artifacts |
 
-## Key Features
+## How It Works
 
-### Provider Abstraction Layer
+Skills chain together into a complete workflow. Each skill produces context that the next skill consumes.
 
-Skills work with **both Jira and Linear** out of the box. A single config file determines which tracker to use — switch providers by changing one line.
+```
+/ae-daily-overview  →  /ae-start-ticket  →  [your work]  →  /ae-create-pr  →  /ae-wrap-up
+                       /ae-resume-work       /ae-update-tickets                /ae-session-recap
+```
+
+### Provider Abstraction
+
+Works with **both Jira and Linear** out of the box. A single config file determines which tracker to use.
 
 ```json
-{
-  "provider": "jira",
-  "jira": { "project": "YOUR-PROJECT", "cloudId": "your-org.atlassian.net" },
-  "linear": { "team": "Your Team", "teamId": "uuid" }
-}
+{ "provider": "jira" }   ← change to "linear" when your org migrates
 ```
 
-When your org migrates trackers, you change the config. Every skill switches automatically. See [`providers/`](providers/) for the full translation table.
+The `/ae-setup` wizard configures this for you. When your org switches trackers, run setup again or edit one JSON file. Every skill switches automatically.
 
 ### Artifact Management
 
-Every ticket gets a local artifact directory organized by domain:
+Every ticket gets a local artifact directory:
 
 ```
 ~/Desktop/pr_artifacts/
-├── comp/
+├── data-quality/
 │   └── PROJ-1234/
-│       ├── context.md              # Living status doc
-│       ├── implementation_plan.md
-│       └── validation_query.sql
-└── data-quality/
-    └── PROJ-1300/
+│       ├── context.md              # Living status doc (created by start-ticket)
+│       ├── implementation_plan.md   # Codebase-informed plan
+│       └── validation_query.sql    # How to verify correctness
+└── infra/
+    └── PROJ-1400/
         └── context.md
 ```
 
-Context files flow between skills — `/start-ticket` creates them, `/resume-work` reads them, `/wrap-up` updates them. Knowledge compounds across related tickets in the same category. See [`patterns/artifact-management.md`](patterns/artifact-management.md) for the full pattern.
+Context files flow between skills — `/ae-start-ticket` creates them, `/ae-resume-work` reads them, `/ae-wrap-up` updates them. Knowledge compounds across related tickets in the same category.
 
 ### Graceful Degradation
 
-Every external dependency (tracker, GitHub, meeting notes MCP) is optional. If a service is down, skills skip that step and keep going. No skill blocks on a flaky integration.
+Every external dependency (tracker MCP, GitHub CLI, meeting notes) is optional. If a service is down, skills skip that step and keep going.
 
-## Setup
-
-### 1. Copy provider config and reference
-
-```bash
-mkdir -p ~/.claude/skills/_shared
-cp providers/ticket-provider.json ~/.claude/skills/_shared/
-cp providers/ticket-provider.md ~/.claude/skills/_shared/
-```
-
-### 2. Edit the config for your org
-
-Set your project key, cloud ID (Jira), or team name/ID (Linear) in `ticket-provider.json`.
-
-### 3. Copy and customize skills
-
-```bash
-cp skills/*.md ~/.claude/skills/
-```
-
-Each skill is a starting point — customize for your stack, repos, and team conventions.
-
-### 4. Set up artifacts directory
-
-```bash
-mkdir -p ~/Desktop/pr_artifacts
-```
-
-## File Structure
+## Plugin Structure
 
 ```
 ae-workflow-kit/
-├── README.md
-├── LICENSE
-├── providers/
-│   ├── ticket-provider.json         # Provider toggle + org settings
-│   └── ticket-provider.md          # Jira <-> Linear operation mapping
+├── .claude-plugin/
+│   └── plugin.json                     # Plugin metadata
+├── commands/
+│   └── ae-setup.md                     # Interactive setup wizard
 ├── skills/
-│   ├── daily-overview.md            # Start of day
-│   ├── start-ticket.md              # New ticket kickoff
-│   ├── resume-work.md               # Session resumption
-│   ├── create-pr.md                 # PR creation
-│   ├── update-tickets.md            # Tracker reconciliation
-│   ├── wrap-up.md                   # End of session
-│   ├── session-recap.md             # Session summary
-│   └── accomplishments.md           # Accomplishment tracking
-└── patterns/
-    ├── artifact-management.md       # The pr_artifacts system
-    └── skill-lifecycle.md           # How skills chain together
+│   ├── daily-overview/SKILL.md         # /ae-daily-overview
+│   ├── start-ticket/SKILL.md           # /ae-start-ticket
+│   ├── resume-work/SKILL.md            # /ae-resume-work
+│   ├── create-pr/SKILL.md              # /ae-create-pr
+│   ├── update-tickets/SKILL.md         # /ae-update-tickets
+│   ├── wrap-up/SKILL.md                # /ae-wrap-up
+│   ├── session-recap/SKILL.md          # /ae-session-recap
+│   ├── accomplishments/SKILL.md        # /ae-accomplishments
+│   └── _provider-reference/
+│       └── ticket-provider.md          # Jira ↔ Linear translation table
+├── LICENSE
+└── README.md
 ```
 
-## Concept Mapping (Jira vs Linear)
+## Requirements
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+- GitHub CLI (`gh`) — for PR operations
+- At least one tracker MCP:
+  - Jira: [Atlassian MCP](https://www.npmjs.com/package/@anthropic-ai/atlassian-mcp)
+  - Linear: [Linear MCP](https://linear.app/docs/mcp)
+
+## Concept Mapping
 
 | Concept | Jira | Linear |
 |---------|------|--------|
-| Project unit | Project (`PROJ`) | Team |
+| Project unit | Project | Team |
 | Sprint | Sprint | Cycle |
 | Status change | 2-step transition | Direct state set |
 | Story points | Custom field | First-class `estimate` |
 | Create + assign + sprint | 3 API calls | 1 API call |
 
-## Why This Exists
+## Design Principles
 
-Analytics engineers spend a surprising amount of time on overhead — remembering what they were working on, filling out PR templates, keeping trackers in sync, preparing for reviews. This kit automates that overhead so you can focus on the actual engineering.
+**Context flows forward.** Each skill produces artifacts the next skill consumes. `/ae-start-ticket` writes context → `/ae-resume-work` reads it → `/ae-wrap-up` updates it → next session picks up cleanly.
 
-The skills are designed around two beliefs:
+**Skills don't replace work.** They handle overhead — context switching, status tracking, PR boilerplate, tracker hygiene. The engineering is yours.
 
-1. **Context is expensive, disk is cheap.** Save everything. Your future self will thank you when a similar ticket comes up six months from now.
+**Provider-agnostic.** Tracker operations go through an abstraction layer. Switch from Jira to Linear by changing one config value.
 
-2. **Skills should chain, not stand alone.** A daily overview that feeds into ticket selection that feeds into context loading that feeds into PR creation — that's a workflow. Individual skills are nice; a workflow is transformative.
-
-## Requirements
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-- GitHub CLI (`gh`) for PR operations
-- MCP server for your tracker:
-  - Jira: [Atlassian MCP](https://www.npmjs.com/package/@anthropic-ai/atlassian-mcp)
-  - Linear: [Linear MCP](https://linear.app/docs/mcp)
+**Graceful degradation.** If Jira is down, `/ae-start-ticket` asks you for a description and keeps going. No skill blocks on a flaky integration.
 
 ## License
 

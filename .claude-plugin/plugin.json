@@ -1,0 +1,8 @@
+{
+  "name": "ae-workflow-kit",
+  "description": "Complete workflow automation for analytics engineers — daily overview, ticket lifecycle, PR creation, accomplishment tracking. Provider-agnostic (Jira/Linear).",
+  "author": {
+    "name": "Chris Halim",
+    "email": "krispix418@users.noreply.github.com"
+  }
+}
