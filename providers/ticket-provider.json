@@ -1,0 +1,13 @@
+{
+  "provider": "jira",
+  "jira": {
+    "project": "YOUR-PROJECT",
+    "cloudId": "your-org.atlassian.net",
+    "ticketUrlBase": "https://your-org.atlassian.net/browse"
+  },
+  "linear": {
+    "team": null,
+    "teamId": null,
+    "ticketUrlBase": "https://linear.app/your-org/issue"
+  }
+}
